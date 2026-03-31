@@ -9,3 +9,4 @@ storage.py	    -   write and read data to a file
 ui.py	        -   no logic. tkiner.
 data.json       -   auto create when run program. do not upload to GitHub
 
+Yuval dar add line - 31.3.26 - hour 16:27
