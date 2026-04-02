@@ -1,9 +1,9 @@
 import datetime as dt
 import random as rd
 import os
-# from dotenv import load_dotenv
+from dotenv import load_dotenv
 
-# load_dotenv()
+load_dotenv()
 
 
 class Account:
@@ -34,7 +34,12 @@ class Account:
             return "failed"
 
     def transaction_out(self, amount: float, input_pin: int, counterparty: str):
-        return self.withdraw(amount, input_pin, )
+        if self.check_pin(input_pin) and amount > 0.0 and amount < self.balance:
+            self.balance -= amount
+            self.record_action(dt.datetime.now(), amount, "withdraw")
+            return "success"
+        else:
+            return "failed"
 
     def deposit(self, amount: float, input_pin: int):
         if self.check_pin(input_pin) and amount > 0.0:
@@ -45,7 +50,12 @@ class Account:
             return "failed"
 
     def transaction_in(self, amount: float, input_pin: int,counterparty: str):
-        return self.deposit(amount, input_pin)
+        if self.check_pin(input_pin) and amount > 0.0:
+            self.balance += amount
+            self.record_action(dt.datetime.now(), amount, "deposit")
+            return "success"
+        else:
+            return "failed"
 
     def change_pin(self, old_pin: int, new_pin: int):
         if self.check_pin(old_pin):
