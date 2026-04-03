@@ -1,6 +1,7 @@
 import datetime as dt
 import random as rd
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -22,7 +23,7 @@ class Account:
         return user_input == self.pin
 
     def withdraw(self, amount: float, input_pin: int) -> bool:
-        if self.check_pin(input_pin) and amount > 0.0 and amount < self.balance:
+        if self.check_pin(input_pin) and amount > 0.0 and amount <= self.balance:
             self.balance -= amount
             self.record_action(dt.datetime.now(), amount, "withdraw")
             return True
@@ -30,7 +31,7 @@ class Account:
             return False
 
     def transaction_out(self, amount: float, input_pin: int, counterparty: str) -> bool:
-        if self.check_pin(input_pin) and amount > 0.0 and amount < self.balance:
+        if self.check_pin(input_pin) and amount > 0.0 and amount <= self.balance:
             self.balance -= amount
             self.record_action(dt.datetime.now(), amount, "transaction_out", counterparty)
             return True
@@ -111,8 +112,8 @@ class Bank:
             return False, "receiver account not found"
         sender = self._accounts[sender_id]
         receiver = self._accounts[receiver_id]
-        success = sender.transaction_out(amount, sender_pin, counterparty=receiver.name)
-        if not success:
+        is_success = sender.transaction_out(amount, sender_pin, counterparty=receiver.name)
+        if not is_success:
             return False, "failed, check pin and that have enougeh balance"
         receiver.transaction_in(amount, receiver.pin, counterparty=sender.name)
         return True, "success"
