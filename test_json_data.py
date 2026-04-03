@@ -1,3 +1,7 @@
+"""use website:
+https://jsonformatter.curiousconcept.com/#
+copy the json file there and see it in a readable way."""
+
 from storage import save_data, load_data
 from models import Bank
 

@@ -4,6 +4,8 @@
 problem: json can only work with basic data types as Dict. so we must convert.
 the other 2 functions are helper's to convert Bank obj to dict and dict to Bank obj"""
 
+## ! our design - in UI must use "save_data(bank)" after every action.
+
 import json
 import datetime as dt
 from models import Bank, Account

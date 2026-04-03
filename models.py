@@ -86,8 +86,7 @@ class Account:
 class Bank:
     def __init__(self):
         self._accounts: dict[int, Account] = {}
-        # _ convention for private.
-        # dict[int, Account] informational only
+        # dict[int, Account] == "python annotation" - informational only
 
     def create_account(self, name: str, balance: float = 0) -> Account:
         account_id = self._generate_id()
@@ -109,7 +108,7 @@ class Bank:
 
     def list_all_accounts(self) -> None:
         for account_id, account in self._accounts.items():
-            print(f"ID: {account_id} | Username: {account.name} | Balance: {account.balance} | Active: {account.is_blocked} | PIN: {account.pin}")
+            print(f"ID: {account_id} | Username: {account.name} | Balance: {account.balance} | Active: {not account.is_blocked} | PIN: {account.pin}")
 
     def transaction_to_from_accounts(self, sender_id: int, receiver_id: int, amount: float, sender_pin: int) -> tuple[bool, str]:
         if not self.is_account_created(sender_id):
