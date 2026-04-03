@@ -15,52 +15,51 @@ class Account:
         self.is_blocked = False
         self.actions_log = []
 
-
-    def generate_pin(self) -> bool:
+    def generate_pin(self) -> int:
         return rd.randint(1000, 9999)
 
-    def check_pin(self, user_input: int) ->bool:
+    def check_pin(self, user_input: int) -> bool:
         return user_input == self.pin
 
     def withdraw(self, amount: float, input_pin: int) -> bool:
         if self.check_pin(input_pin) and amount > 0.0 and amount < self.balance:
             self.balance -= amount
             self.record_action(dt.datetime.now(), amount, "withdraw")
-            return True, "success"
+            return True
         else:
-            return False, "failed"
+            return False
 
     def transaction_out(self, amount: float, input_pin: int, counterparty: str) -> bool:
         if self.check_pin(input_pin) and amount > 0.0 and amount < self.balance:
             self.balance -= amount
             self.record_action(dt.datetime.now(), amount, "transaction_out", counterparty)
-            return True, "success"
+            return True
         else:
-            return False, "failed"
+            return False
 
     def deposit(self, amount: float, input_pin: int) -> bool:
         if self.check_pin(input_pin) and amount > 0.0:
             self.balance += amount
             self.record_action(dt.datetime.now(), amount, "deposit")
-            return True, "success"
+            return True
         else:
-            return False, "failed"
+            return False
 
-    def transaction_in(self, amount: float, input_pin: int,counterparty: str) -> bool:
+    def transaction_in(self, amount: float, input_pin: int, counterparty: str) -> bool:
         if self.check_pin(input_pin) and amount > 0.0:
             self.balance += amount
             self.record_action(dt.datetime.now(), amount, "transaction_in", counterparty)
-            return True, "success"
+            return True
         else:
-            return False, "failed"
+            return False
 
     def change_pin(self, old_pin: int, new_pin: int) -> bool:
         if self.check_pin(old_pin):
             self.pin = new_pin
-            return True, "success"
+            return True
         else:
-            return False, "failed"
-    
+            return False
+
     def record_action(self, date_time: dt.datetime, amount: float, type: str, counterparty=None):
         if type in {"withdraw", "deposit", "transaction_in", "transaction_out"}:
             self.actions_log.append({
@@ -87,7 +86,7 @@ class Bank:
     def __init__(self):
         self._accounts: dict[int, Account] = {}
         # _ convention for private.
-        # [int, Account] informational only
+        # dict[int, Account] informational only
 
     def create_account(self, name: str, balance: float = 0) -> Account:
         account_id = self._generate_id()
@@ -95,29 +94,30 @@ class Bank:
         self._accounts[account_id] = account
         return account
 
-    def get_account(self, account_id: int):
+    def get_account(self, account_id: int) -> Account | None:
         return self._accounts.get(account_id)
 
     def is_account_created(self, account_id: int) -> bool:
         return account_id in self._accounts
 
-    def list_all_accounts(self):
+    def list_all_accounts(self) -> None:
         for account_id, account in self._accounts.items():
             print(f"ID: {account_id} | Username: {account.name} | Balance: {account.balance} | Active: {account.is_blocked} | PIN: {account.pin}")
 
-    def transaction_to_from_accounts(self, sender_id: int, receiver_id: int, amount: float):
+    def transaction_to_from_accounts(self, sender_id: int, receiver_id: int, amount: float, sender_pin: int) -> tuple[bool, str]:
         if not self.is_account_created(sender_id):
             return False, "sender account not found"
         if not self.is_account_created(receiver_id):
             return False, "receiver account not found"
         sender = self._accounts[sender_id]
-        if sender.balance < amount:
-            return False, "insufficient balance"
-        self._accounts[sender_id].balance -= amount
-        self._accounts[receiver_id].balance += amount
-        return True, True, "success"
+        receiver = self._accounts[receiver_id]
+        success = sender.transaction_out(amount, sender_pin, counterparty=receiver.name)
+        if not success:
+            return False, "failed, check pin and that have enougeh balance"
+        receiver.transaction_in(amount, receiver.pin, counterparty=sender.name)
+        return True, "success"
 
-    def log_in_account(self, account_id: int, pin: int):
+    def log_in_account(self, account_id: int, pin: int) -> tuple[bool, str]:
         if not self.is_account_created(account_id):
             return False, "account not created"
         account = self._accounts[account_id]
