@@ -46,8 +46,8 @@ class Account:
         else:
             return False
 
-    def transaction_in(self, amount: float, input_pin: int, counterparty: str) -> bool:
-        if self.check_pin(input_pin) and amount > 0.0:
+    def transaction_in(self, amount: float, counterparty: str) -> bool:
+        if amount > 0.0:
             self.balance += amount
             self.record_action(dt.datetime.now(), amount, "transaction_in", counterparty)
             return True
