@@ -1,3 +1,8 @@
+"""here have 2 main functions (as fitussi intructed):
+1. save_data(bank) - take Bank object, write to 'data.json'
+2. load_data() - read from 'data.json' as Dict, than convert to Bank object, and return it
+the other 2 functions are helper's to convert Bank obj to dict and vice versa for json"""
+
 import json
 import datetime as dt
 from models import Bank, Account

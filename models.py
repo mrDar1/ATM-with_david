@@ -98,6 +98,12 @@ class Bank:
     def get_account(self, account_id: int) -> Account | None:
         return self._accounts.get(account_id)
 
+    def _get_account_by_name(self, name: str) -> Account | None:
+        for account in self._accounts.values():
+            if account.name == name:
+                return account
+        return None
+
     def is_account_created(self, account_id: int) -> bool:
         return account_id in self._accounts
 
