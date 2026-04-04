@@ -166,7 +166,7 @@ class ATMApp:
         pass
 
     def handle_exit(self):
-        pass
+        self.root.destroy()
     # * Logic of 'user Menu' screen -----finish * #
 
     # * shared logic of all screens * #
