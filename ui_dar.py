@@ -65,8 +65,7 @@ class ATMApp:
         def handle_admin():
             password = simpledialog.askstring("Admin Login", "Enter admin password:", show="*")
             if self.bank.is_admin_pin(password):
-                # self.show_admin_zone()
-                messagebox.showerror("good job", "Correct admin password! (Admin zone not implemented yet)")
+                self.show_admin_zone()
             else:
                 messagebox.showerror("Access Denied", "Incorrect admin password")
 
@@ -341,6 +340,222 @@ class ATMApp:
     def handle_exit(self):
         self.root.destroy()
     # * Logic of 'user Menu' screen -----finish * #
+
+    # * UI of 'Admin Zone' screen * #
+    def show_admin_zone(self):
+        self.clear_screen()
+        tk.Label(self.root, text="Admin Zone", bg="#1e1e1e", fg="#ffffff",
+                 font=("Arial", 16, "bold")).place(relx=0.5, rely=0.05, anchor="center")
+
+        # --- buttons frame ---
+        btn_frame = tk.Frame(self.root, bg="#1e1e1e")
+        btn_frame.place(relx=0.5, rely=0.5, anchor="center")
+
+        btn_cfg = dict(width=25, bg="#3c3c3c", fg="#ffffff",
+                       activebackground="#555555", font=("Arial", 11), relief="flat")
+
+        create_account_btn = tk.Button(btn_frame, text="Create new Account", **btn_cfg,
+                                       command=self.handle_create_account)
+        create_account_btn.pack(pady=5)
+
+        watch_accounts_btn = tk.Button(btn_frame, text="Watch all accounts", **btn_cfg,
+                                       command=self.handle_watch_accounts)
+        watch_accounts_btn.pack(pady=5)
+
+        block_account_btn = tk.Button(btn_frame, text="Block / release accounts", **btn_cfg,
+                                      command=self.handle_block_account)
+        block_account_btn.pack(pady=5)
+
+        tk.Button(self.root, text="← Log Out", width=25, bg="#3c3c3c", fg="#aaaaaa",
+                  activebackground="#555555", font=("Arial", 10), relief="flat",
+                  command=self.show_login_screen).place(relx=0.5, rely=0.94, anchor="center")
+
+    # * UI of 'Admin Zone' screen -----finish * #
+
+    # * Logic of 'Admin Zone' screen * #
+    def handle_watch_accounts(self):
+        window = tk.Toplevel(self.root)
+        window.title("All Accounts")
+        window.geometry("600x400")
+        window.configure(bg="#1e1e1e")
+        window.grab_set()
+
+        tk.Label(window, text="All Accounts", bg="#1e1e1e", fg="#ffffff",
+                 font=("Arial", 14, "bold")).pack(pady=(12, 6))
+
+        columns = ("id", "name", "balance", "status")
+        tree = ttk.Treeview(window, columns=columns, show="headings", height=15)
+
+        tree.heading("id", text="Account ID")
+        tree.heading("name", text="Account Name")
+        tree.heading("balance", text="Balance")
+        tree.heading("status", text="Status")
+
+        tree.column("id", width=100, anchor="center")
+        tree.column("name", width=180, anchor="w")
+        tree.column("balance", width=120, anchor="center")
+        tree.column("status", width=100, anchor="center")
+
+        style = ttk.Style()
+        style.configure("Treeview", background="#2d2d2d", foreground="#ffffff",
+                        fieldbackground="#2d2d2d", rowheight=26)
+        style.configure("Treeview.Heading", background="#3c3c3c", foreground="#ffffff")
+        style.map("Treeview", background=[("selected", "#555555")])
+
+        tree.tag_configure("active", foreground="#00cc66")
+        tree.tag_configure("blocked", foreground="#ff4444")
+
+        for acc_id, account in self.bank._accounts.items():
+            status = "Block" if account.is_blocked else "Active"
+            tag = "blocked" if account.is_blocked else "active"
+            tree.insert("", "end",
+                        values=(acc_id, account.name, f"${account.balance:.2f}", status),
+                        tags=(tag,))
+
+        scrollbar = ttk.Scrollbar(window, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=scrollbar.set)
+        tree.pack(side="left", fill="both", expand=True, padx=(10, 0), pady=(0, 10))
+        scrollbar.pack(side="left", fill="y", pady=(0, 10))
+
+    def handle_block_account(self):
+        """exactly the same table as 'watch accounts' but
+        with button to block/unblock each account (except admin)"""
+        window = tk.Toplevel(self.root)
+        window.title("Block / Release Accounts")
+        window.geometry("650x440")
+        window.configure(bg="#1e1e1e")
+        window.grab_set()
+
+        tk.Label(window, text="Block / Release Accounts", bg="#1e1e1e", fg="#ffffff",
+                 font=("Arial", 14, "bold")).pack(pady=(12, 6))
+
+        columns = ("id", "name", "balance", "status", "action")
+        tree = ttk.Treeview(window, columns=columns, show="headings", height=13)
+
+        tree.heading("id", text="Account ID")
+        tree.heading("name", text="Account Name")
+        tree.heading("balance", text="Balance")
+        tree.heading("status", text="Status")
+        tree.heading("action", text="Action")
+
+        tree.column("id", width=90, anchor="center")
+        tree.column("name", width=170, anchor="w")
+        tree.column("balance", width=110, anchor="center")
+        tree.column("status", width=90, anchor="center")
+        tree.column("action", width=130, anchor="center")
+
+        style = ttk.Style()
+        style.configure("Treeview", background="#2d2d2d", foreground="#ffffff",
+                        fieldbackground="#2d2d2d", rowheight=26)
+        style.configure("Treeview.Heading", background="#3c3c3c", foreground="#ffffff")
+        style.map("Treeview", background=[("selected", "#555555")])
+
+        tree.tag_configure("active", foreground="#00cc66")
+        tree.tag_configure("blocked", foreground="#ff4444")
+
+        def populate():
+            tree.delete(*tree.get_children())
+            for acc_id, account in self.bank._accounts.items():
+                status = "Blocked" if account.is_blocked else "Active"
+                action = "Unblock" if account.is_blocked else "Block"
+                tag = "blocked" if account.is_blocked else "active"
+                tree.insert("", "end",
+                            values=(acc_id, account.name, f"${account.balance:.2f}", status, action),
+                            tags=(tag,), iid=str(acc_id))
+
+        populate()
+
+        def toggle_selected():
+            selected = tree.selection()
+            if not selected:
+                messagebox.showwarning("No Selection", "Please select an account first.", parent=window)
+                return
+            acc_id = int(selected[0])
+            account = self.bank._accounts[acc_id]
+            account.is_blocked = not account.is_blocked
+            save_data(self.bank)
+            populate()
+
+        frame_bottom = tk.Frame(window, bg="#1e1e1e")
+        frame_bottom.pack(fill="x", padx=10, pady=(6, 10))
+
+        tk.Button(frame_bottom, text="Block / Unblock Selected",
+                  bg="#e07b00", fg="#ffffff", activebackground="#c46a00",
+                  font=("Arial", 11, "bold"), relief="flat", width=24,
+                  command=toggle_selected).pack(pady=4)
+
+        scrollbar = ttk.Scrollbar(window, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=scrollbar.set)
+        tree.pack(side="left", fill="both", expand=True, padx=(10, 0))
+        scrollbar.pack(side="left", fill="y")
+
+
+    def handle_create_account(self):
+        window = tk.Toplevel(self.root)
+        window.title("Create New Account")
+        window.geometry("380x320")
+        window.configure(bg="#1e1e1e")
+        window.grab_set()
+
+        tk.Label(window, text="Create New Account", bg="#1e1e1e", fg="#ffffff",
+                 font=("Arial", 14, "bold")).pack(pady=(16, 10))
+
+        form = tk.Frame(window, bg="#1e1e1e")
+        form.pack(padx=20, fill="x")
+
+        tk.Label(form, text="Account Name:", bg="#1e1e1e", fg="#cccccc",
+                 font=("Arial", 11)).grid(row=0, column=0, sticky="w", pady=6)
+        name_entry = tk.Entry(form, font=("Arial", 11), bg="#2d2d2d", fg="#ffffff",
+                              insertbackground="#ffffff", relief="flat", width=22)
+        name_entry.grid(row=0, column=1, padx=(10, 0), pady=6)
+
+        tk.Label(form, text="Initial Balance:", bg="#1e1e1e", fg="#cccccc",
+                 font=("Arial", 11)).grid(row=1, column=0, sticky="w", pady=6)
+        balance_entry = tk.Entry(form, font=("Arial", 11), bg="#2d2d2d", fg="#ffffff",
+                                 insertbackground="#ffffff", relief="flat", width=22)
+        balance_entry.insert(0, "0")
+        balance_entry.grid(row=1, column=1, padx=(10, 0), pady=6)
+
+        result_frame = tk.Frame(window, bg="#1e1e1e")
+        result_frame.pack(padx=20, pady=(10, 0), fill="x")
+
+        id_label = tk.Label(result_frame, text="", bg="#1e1e1e", fg="#00cc66",
+                            font=("Arial", 11, "bold"))
+        id_label.pack(anchor="w")
+        pin_label = tk.Label(result_frame, text="", bg="#1e1e1e", fg="#00cc66",
+                             font=("Arial", 11, "bold"))
+        pin_label.pack(anchor="w")
+
+        def submit():
+            name = name_entry.get().strip()
+            if not name:
+                messagebox.showwarning("Missing Name", "Please enter an account name.", parent=window)
+                return
+            try:
+                balance = float(balance_entry.get())
+            except ValueError:
+                messagebox.showwarning("Invalid Balance", "Balance must be a number.", parent=window)
+                return
+            if balance < 0:
+                messagebox.showwarning("Invalid Balance", "Balance cannot be negative.", parent=window)
+                return
+
+            account = self.bank.create_account(name=name, balance=balance)
+            save_data(self.bank)
+
+            name_entry.config(state="disabled")
+            balance_entry.config(state="disabled")
+            id_label.config(text=f"Account ID:  {account.id}")
+            pin_label.config(text=f"Account PIN: {account.pin}")
+            submit_btn.config(text="Account created successfully,\ncopy details and close window", state="disabled", width=34)
+
+        submit_btn = tk.Button(window, text="Create Account",
+                               bg="#00884d", fg="#ffffff", activebackground="#006b3c",
+                               font=("Arial", 11, "bold"), relief="flat", width=20,
+                               command=submit)
+        submit_btn.pack(pady=(12, 4))
+
+    # * Logic of 'Admin Zone' screen -----finish * #
 
     # * shared logic of all screens * #
     def clear_screen(self):
