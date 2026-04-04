@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from storage import load_data
+from storage import load_data, save_data
 
 
 class ATMApp:
@@ -107,12 +107,16 @@ class ATMApp:
         withdraw_btn.config(command=self.handle_withdraw)
         transfer_btn = tk.Button(btn_frame, text="Transfer",       **btn_cfg)
         transfer_btn.pack(pady=5)
+        transfer_btn.config(command=self.handle_transfer)
         history_btn = tk.Button(btn_frame, text="History",    **btn_cfg)
         history_btn.pack(pady=5)
+        history_btn.config(command=self.handle_history)
         change_pin_btn = tk.Button(btn_frame, text="Change PIN", **btn_cfg)
         change_pin_btn.pack(pady=5)
+        change_pin_btn.config(command=self.handle_change_pin)
         exit_btn = tk.Button(btn_frame, text="Exit entire App", **btn_cfg)
         exit_btn.pack(pady=5)
+        exit_btn.config(command=self.handle_exit)
 
         tk.Button(self.root, text="← Log Out", width=25, bg="#3c3c3c", fg="#aaaaaa",
                   activebackground="#555555", font=("Arial", 10), relief="flat",
@@ -141,6 +145,7 @@ class ATMApp:
             account = self.bank.get_account(self.current_account_id)
             success = account.deposit(amount, self.current_pin)
             if success:
+                save_data(self.bank)
                 messagebox.showinfo("Success", f"Deposited ${amount:,.2f} successfully", parent=window)
                 window.destroy()
             else:
