@@ -149,6 +149,7 @@ class LoginPage(ttk.Frame):
             background=styles.color_less_dark_bg,
             foreground=styles.color_text_color,
             borderwidth=0,
+            highlightthickness=0,
             insertbackground=styles.color_text_color
   
         )
@@ -181,6 +182,7 @@ class LoginPage(ttk.Frame):
             background=styles.color_less_dark_bg,
             foreground=styles.color_text_color,
             borderwidth=0,
+            highlightthickness=0,
             insertbackground=styles.color_text_color,
             show="*"  
         )
