@@ -89,8 +89,9 @@ class ATMApp:
                  font=("Arial", 15, "bold")).pack(pady=(12, 2))
         tk.Label(info_frame, text=f"ID: {account.id}", bg="#2e2e2e", fg="#aaaaaa",
                  font=("Arial", 11)).pack()
-        tk.Label(info_frame, text=f"Balance: ${account.balance:,.2f}", bg="#2e2e2e", fg="#4caf50",
-                 font=("Arial", 13, "bold")).pack(pady=(4, 12))
+        self.balance_label = tk.Label(info_frame, text=f"Balance: ${account.balance:,.2f}", bg="#2e2e2e", fg="#4caf50",
+                                      font=("Arial", 13, "bold"))
+        self.balance_label.pack(pady=(4, 12))
 
         # --- buttons frame ---
         btn_frame = tk.Frame(self.root, bg="#1e1e1e")
@@ -146,6 +147,7 @@ class ATMApp:
             success = account.deposit(amount, self.current_pin)
             if success:
                 save_data(self.bank)
+                self.balance_label.config(text=f"Balance: ${account.balance:,.2f}")
                 messagebox.showinfo("Success", f"Deposited ${amount:,.2f} successfully", parent=window)
                 window.destroy()
             else:
@@ -175,6 +177,7 @@ class ATMApp:
             success = account.withdraw(amount, self.current_pin)
             if success:
                 save_data(self.bank)
+                self.balance_label.config(text=f"Balance: ${account.balance:,.2f}")
                 messagebox.showinfo("Success", f"Withdrew ${amount:,.2f} successfully", parent=window)
                 window.destroy()
             else:
