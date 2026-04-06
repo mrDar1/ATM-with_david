@@ -45,6 +45,7 @@ class ATMApp(tk.Tk):
 
 
 class LogPage(ttk.Frame):
+    """the 'history' page, should access from account screen"""
     def __init__(self, parent, controller):
         self.bank: Bank = controller.bank
         self.account: Account = controller.account
@@ -144,6 +145,7 @@ class LogPage(ttk.Frame):
 
 
 class LoginPage(ttk.Frame):
+    """the first screen use sees"""
     def __init__(self, parent, controller):
         self.bank: Bank = controller.bank
 
