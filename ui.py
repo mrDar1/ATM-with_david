@@ -30,9 +30,9 @@ class ATMApp:
         style.configure("TLabel",  background=BG,  foreground=FG)
         # for dark background - end.
 
-    def shared_log_out_backward_button(self):
+    def shared_return_to_log_in_button(self):
         """to be use when return to 'log in' screen from user menu or admin zone"""
-        tk.Button(self.root, text="Backward", width=25, bg=BTN, fg=FG_MUTED,
+        tk.Button(self.root, text="Return", width=25, bg=BTN, fg=FG_MUTED,
                   activebackground=BTN_ACTIVE, font=("Arial", 10), relief="flat",
                   command=self.show_login_screen).place(relx=0.5, rely=0.94, anchor="center")
 
@@ -62,6 +62,7 @@ class ATMApp:
                              relief="flat", font=("Arial", 13))
         pin_entry.place(relx=0.5, rely=0.56, anchor="center")
 
+        # --- logic (functions must be above buttons that call's them in short format) ---
         def handle_login():
             account_id_str = account_entry.get()
             pin_str = pin_entry.get()
@@ -88,6 +89,7 @@ class ATMApp:
             else:
                 messagebox.showerror("Access Denied", "Incorrect admin password")
 
+        # --- UI buttons: ---
         # Log In button:
         tk.Button(self.root, text="Log In", **self.BTN_CFG,
                   command=handle_login).place(relx=0.5, rely=0.65, anchor="center")
@@ -140,11 +142,12 @@ class ATMApp:
         change_pin_btn = tk.Button(btn_frame, text="Change PIN", **self.BTN_CFG)
         change_pin_btn.pack(pady=5)
         change_pin_btn.config(command=self.handle_change_pin)
-        exit_btn = tk.Button(btn_frame, text="Exit entire App", **self.BTN_CFG)
-        exit_btn.pack(pady=5)
-        exit_btn.config(command=self.handle_exit)
+        # # I belive no need for Exit button here, if want can uncomment:
+        # exit_btn = tk.Button(btn_frame, text="Exit entire App", **self.BTN_CFG)
+        # exit_btn.pack(pady=5)
+        # exit_btn.config(command=self.handle_exit)
 
-        self.shared_log_out_backward_button()
+        self.shared_return_to_log_in_button()
     # * UI DESIGN of 'user Menu' screen - no logic -----finish * #
     # * UI DESIGN of 'user Menu' screen - no logic -----finish * #
 
@@ -276,8 +279,9 @@ class ATMApp:
         tk.Button(window, text="Transfer", command=confirm_transfer).pack(pady=14)
 
     def handle_history(self):
-        """use fitussi first easier option: 'insert(tk.End, text) and not
-        'tk.Text' and "STATE=DISABLED" to make it read-only, because easier and only 'read'"""
+        """fitussi gave 2 options: 'tk.Listbox' with 'insert(tk.END, text)' or
+        'tk.Text' with "STATE=DISABLED".
+        we chose the first options because that enough for here read-only text"""
         account = self.bank.get_account(self.current_account_id)
         window = tk.Toplevel(self.root)
         window.title("Transaction History")
@@ -383,7 +387,7 @@ class ATMApp:
                                       command=self.handle_block_account)
         block_account_btn.pack(pady=5)
 
-        self.shared_log_out_backward_button()
+        self.shared_return_to_log_in_button()
 
     # * UI of 'Admin Zone' screen -----finish * #
     # * UI of 'Admin Zone' screen -----finish * #
@@ -391,6 +395,7 @@ class ATMApp:
     # * Logic of 'Admin Zone' screen * #
     # * Logic of 'Admin Zone' screen * #
     def handle_watch_accounts(self):
+        """Fitussi said use 'ttk.Treeview' for history"""
         window = tk.Toplevel(self.root)
         window.title("All Accounts")
         window.geometry("600x400")
@@ -436,7 +441,8 @@ class ATMApp:
 
     def handle_block_account(self):
         """exactly the same table as 'watch accounts' but
-        with button to block/unblock each account (except admin)"""
+        with button to block/unblock each account (except admin)
+        again, Fitussi said use 'ttk.Treeview' here"""
         window = tk.Toplevel(self.root)
         window.title("Block / Release Accounts")
         window.geometry("650x440")
@@ -577,7 +583,10 @@ class ATMApp:
     # * shared logic of all screens * #
     # * shared logic of all screens * #
     def clear_screen(self):
-        """we use single-window design, so to navigate to new screen must clear it first"""
+        """at basic-UI we use single-window design, good for small App.
+        at that design to navigate to new screen must clear it first.
+        at Figma UI we use Frame for each screen, so no clear_screen,
+        just raise the right one - better for scaling."""
         for widget in self.root.winfo_children():
             widget.destroy()
 

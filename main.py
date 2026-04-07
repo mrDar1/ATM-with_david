@@ -1,5 +1,8 @@
-"""2 options for UI: Figma Design or basic, uncomment your choice and comment the other one"""
-# Regular UI
+"""2 options for UI: Figma Design or basic.
+right now, beutiful Figma has 2 ready screens,
+other than that will jump to basic UI (when press admin zone button)"""
+
+# basic UI
 # import ui
 # ui.ATMApp().run()
 
