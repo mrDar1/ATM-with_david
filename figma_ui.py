@@ -19,6 +19,7 @@ import ui
 # after each action, for save data use:
 # storage.save_data(self.bank)
 
+
 class ATMApp(tk.Tk):
     def __init__(self, bank: Bank):
         super().__init__()
@@ -144,13 +145,6 @@ class LogPage(ttk.Frame):
         action_counterparty_label.grid(row=1, sticky="se")
 
         return frame_outside
-
-
-
-
-
-def load_basic_ui_and_call_history():
-    ui.ATMApp().run()
 
 
 class LoginPage(ttk.Frame):
@@ -315,16 +309,16 @@ class LoginPage(ttk.Frame):
 
         self.admin_button = ttk.Button(
             self,
-            text="Admin",
+            text="Sudo_Admin_Login",
             style="Login.TButton",
             cursor="hand2",
-            command=self.handle_admin
+            command=self.open_basic_ui
         )
         self.admin_button.pack(pady=(0, 8), padx=62, fill="x", anchor="w")
 
         self.exit_button = ttk.Button(
             self,
-            text="Exit",
+            text="SIGTERM_EXIT",
             style="Login.TButton",
             cursor="hand2",
             command=self.controller.destroy
@@ -351,6 +345,6 @@ class LoginPage(ttk.Frame):
         else:
             print("invalid input")
 
-    def handle_admin(self):
+    def open_basic_ui(self):
         self.controller.destroy()
         ui.ATMApp().run()
