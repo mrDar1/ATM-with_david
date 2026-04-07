@@ -1,12 +1,13 @@
-"""2 options for UI: David and Dar, uncomment your choice and comment the other one"""
-# * dar UI
-# import ui_dar
-# ui_dar.ATMApp().run()
-
-
-# * David's UI
+"""2 options for UI: Fimga Design or Regular, uncomment your choice and comment the other one"""
 import storage
-import ui
+
+# Regular UI
+# import ui
+# ui.ATMApp().run()
+
+# Figma Design UI
+import storage
+import figma_ui
 
 bank = storage.load_data()
-ui.ATMApp(bank).mainloop()
+figma_ui.ATMApp(bank).mainloop()

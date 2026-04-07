@@ -1,342 +1,582 @@
-# import ctypes
 import tkinter as tk
-from tkinter import ttk
-from models import Bank, Account
-import storage
-import styles
-import datetime as dt
-# Fix pixelation on Windows
-# try:
-#     ctypes.windll.shcore.SetProcessDpiAwareness(1)
-# except Exception:
-#     try:
-#         ctypes.windll.user32.SetProcessDPIAware()
-#     except Exception:
-#         pass
-
-# after each action, for save data use:
-# storage.save_data(self.bank)
-
-class ATMApp(tk.Tk):
-    def __init__(self, bank: Bank):
-        super().__init__()
-        self.bank = bank
-        self.account: Account
-        self.title("DevOps ATM")
-        # self.geometry(f"{styles.window_width}x{styles.window_hight}")
-        self.resizable(False, False)
-        self.configure(bg=styles.color_dark_bg)
-
-        # holds pages on top of each other
-        container = tk.Frame(self, bg=styles.color_dark_bg)
-        container.pack(fill="both", expand=True)
-
-        self.frames = {}
-
-        frame = LoginPage(parent=container, controller=self)
-        self.frames[LoginPage] = frame
-        frame.grid(row=0, column=0, sticky="nsew")
-
-        self.show_frame(LoginPage)
-
-    def show_frame(self, page_class: tk.Frame):
-        frame = self.frames[page_class]
-        frame.tkraise()
+from tkinter import ttk, messagebox, simpledialog
+from storage import load_data, save_data
 
 
-class LogPage(ttk.Frame):
-    """the 'history' page, should access from account screen"""
-    def __init__(self, parent, controller):
-        self.bank: Bank = controller.bank
-        self.account: Account = controller.account
-        super().__init__(parent, style="Log.TFrame")
-        self.controller = controller
+class ATMApp:
+    def __init__(self):
+        self.bank = load_data()
 
-        # Configure Styles for this page
-        self.style = ttk.Style()
-        self.style.theme_use('clam')
+        # * shared UI DESIGN for all screens * #
+        # * shared UI DESIGN for all screens * #
+        self.root = tk.Tk()
+        self.root.title("David & Yuval © ATM")  # window upper title
+        self.root.geometry("390x844")  # iPhone 14 portrait
 
-        self.page_titles()
+        # for dark background
+        self.root.configure(bg="#1e1e1e")
+        style = ttk.Style()
+        style.theme_use("clam")  # required for color overrides
+        style.configure("TButton", background="#3c3c3c", foreground="#ffffff")
+        style.configure("TLabel",  background="#1e1e1e", foreground="#ffffff")
+        # for dark background - end.
+        # * shared UI DESIGN for all screens --- finish * #
+        # * shared UI DESIGN for all screens --- finish * #
 
-        self.actions_log: list[dict[dt.datetime, float, str, str]] = self.account.actions_log
+    # * UI DESIGN + Logic of 'Log In' screen * #
+    # * UI DESIGN + Logic of 'Log In' screen * #
+    def show_login_screen(self):
+        self.clear_screen()
 
-        for action in self.actions_log:
-            new_card: tk.Frame = self.log_card(amount=action["amount"],datetime=action["time"],action_type=action["type"],counter_party=action["counterparty"])
-            new_card.pack(pady=5, padx=62, fill="x")
+        # big title:
+        tk.Label(self.root, text="ATM machine", bg="#1e1e1e", fg="#ffffff",
+                 font=("Arial", 16, "bold")).place(relx=0.5, rely=0.05, anchor="center")
 
-    def page_titles(self):
-        # Frame styles
+        # account ID entry:
+        tk.Label(self.root, text="Account ID", bg="#1e1e1e", fg="#aaaaaa",
+                 font=("Arial", 11)).place(relx=0.5, rely=0.35, anchor="center")
+        account_entry = tk.Entry(self.root, width=28, bg="#2e2e2e", fg="#ffffff", insertbackground="#ffffff",
+                                 relief="flat", font=("Arial", 13))
+        account_entry.place(relx=0.5, rely=0.41, anchor="center")
 
-        self.style.configure("Log.TFrame", background=styles.color_dark_bg)
-        # Label styles
-        self.style.configure("LogTitle.TLabel",
-                             background=styles.color_dark_bg,
-                             foreground=styles.color_terminal_green,
-                             font=styles.font_page_title)
+        # PIN entry (hidden):
+        tk.Label(self.root, text="PIN", bg="#1e1e1e", fg="#aaaaaa",
+                 font=("Arial", 11)).place(relx=0.5, rely=0.50, anchor="center")
+        pin_entry = tk.Entry(self.root, width=28, show="●", bg="#2e2e2e", fg="#ffffff", insertbackground="#ffffff",
+                             relief="flat", font=("Arial", 13))
+        pin_entry.place(relx=0.5, rely=0.56, anchor="center")
 
-        self.style.configure("LogIcon.TLabel",
-                             background=styles.color_dark_bg,
-                             foreground=styles.color_terminal_yellow,
-                             font=styles.font_page_title)
+        def handle_login():
+            account_id_str = account_entry.get()
+            pin_str = pin_entry.get()
 
-        self.style.configure("LogSubtitle.TLabel",
-                             background=styles.color_dark_bg,
-                             foreground=styles.color_text_color,
-                             font=styles.font_page_sub_title)
+            try:
+                account_id = int(account_id_str)
+                pin = int(pin_str)
+            except ValueError:
+                messagebox.showerror("Login Failed", "Account ID and PIN must be numbers")
+                return
 
-        # ---titles---
-        self.title_frame = ttk.Frame(self, style="Log.TFrame")
-        self.title_frame.pack(pady=(102, 0), padx=62, fill="x")
-
-        self.page_title = ttk.Label(
-            self.title_frame,
-            text=".LOG",
-            style="LogTitle.TLabel"
-        )
-        self.page_title.pack(side="left")
-
-        self.log_icon_image = tk.PhotoImage(file="images/archive icon.png")
-
-        self.page_icon = tk.Label(
-            self.title_frame,
-            background=styles.color_dark_bg,
-            image=self.log_icon_image,
-            borderwidth=0,
-            highlightthickness=0
-        )
-        self.page_icon.pack(side="top", anchor="ne")
-
-        self.page_subtitle = ttk.Label(
-            self,
-            text="Past_Activities",
-            style="LogSubtitle.TLabel"
-        )
-        self.page_subtitle.pack(pady=(0, 20), padx=62, anchor="w")
-
-    def log_card(self, amount: float, datetime: dt.datetime, action_type: str, counter_party: str) -> tk.Frame:  # counter_party
-        frame_outside = tk.Frame(self, background=styles.color_less_dark_bg, height=2)
-        frame_inside = tk.Frame(frame_outside, background=styles.color_dark_bg)
-        amount_lable = tk.Label(frame_inside, text=("₪"+str(amount)), font=styles.font_button, foreground=styles.color_text_color, background=styles.color_dark_bg)
-        datetime_label = tk.Label(frame_inside, text=datetime.strftime("%d/%m/%y %H:%M"), background=styles.color_dark_bg, font=styles.font_detils, foreground=styles.color_text_color)
-        if action_type == "withdraw":
-            action_type_label = tk.Label(frame_inside, text="WITHDRAW", font=styles.font_field, background=styles.color_dark_bg, foreground=styles.color_terminal_red)
-            action_counterparty_label = tk.Label(frame_inside, text=counter_party, font=styles.font_detils, background=styles.color_dark_bg, foreground=styles.color_text_color)
-        elif action_type == "deposit":
-            action_type_label = tk.Label(frame_inside, text="DEPOSIT", font=styles.font_field, background=styles.color_dark_bg, foreground=styles.color_terminal_green)
-            action_counterparty_label = tk.Label(frame_inside, text=counter_party, font=styles.font_detils, background=styles.color_dark_bg, foreground=styles.color_text_color)
-        elif action_type == "transaction_in":
-            action_type_label = tk.Label(frame_inside, text="FROM", font=styles.font_field, background=styles.color_dark_bg, foreground=styles.color_terminal_green)
-            action_counterparty_label = tk.Label(frame_inside, text=counter_party, font=styles.font_detils, background=styles.color_dark_bg, foreground=styles.color_text_color)
-        elif action_type == "transaction_out":
-            action_type_label = tk.Label(frame_inside, text="TO", font=styles.font_field, background=styles.color_dark_bg, foreground=styles.color_terminal_red)
-            action_counterparty_label = tk.Label(frame_inside, text=counter_party, font=styles.font_detils, background=styles.color_dark_bg, foreground=styles.color_text_color)
-        else:
-            action_type_label = tk.Label(frame_inside, text="Error", font=styles.font_field, background=styles.color_dark_bg, foreground=styles.color_terminal_yellow)
-
-        frame_inside.pack(side="top", fill="x", pady=(0, 2))
-        frame_inside.grid_columnconfigure(0, weight=1)
-
-        amount_lable.grid(row=0, sticky="nw")
-        action_type_label.grid(row=0, sticky="ne")
-        datetime_label.grid(row=1, sticky="sw")
-        action_counterparty_label.grid(row=1, sticky="se")
-
-        return frame_outside
-
-
-class LoginPage(ttk.Frame):
-    """the first screen use sees"""
-    def __init__(self, parent, controller):
-        self.bank: Bank = controller.bank
-
-        # Configure Styles for this page
-        self.style = ttk.Style()
-        self.style.theme_use('clam')
-
-        # Frame styles
-        self.style.configure("Login.TFrame", background=styles.color_dark_bg)
-        self.style.configure("Input.TFrame", background=styles.color_less_dark_bg)
-
-        # Label styles
-        self.style.configure("LoginTitle.TLabel",
-                             background=styles.color_dark_bg,
-                             foreground=styles.color_terminal_green,
-                             font=styles.font_page_title)
-
-        self.style.configure("LoginIcon.TLabel",
-                             background=styles.color_dark_bg,
-                             foreground=styles.color_terminal_yellow,
-                             font=styles.font_page_title)
-
-        self.style.configure("LoginSubtitle.TLabel",
-                             background=styles.color_dark_bg,
-                             foreground=styles.color_text_color,
-                             font=styles.font_page_sub_title)
-
-        self.style.configure("LoginDetail.TLabel",
-                             background=styles.color_dark_bg,
-                             foreground=styles.color_terminal_green,
-                             font=styles.font_detils)
-
-        # Entry style
-        # self.style.configure("Login.TEntry",
-        #                      fieldbackground=styles.color_less_dark_bg,
-        #                      foreground=styles.color_text_color,
-        #                      insertbackground=styles.color_text_color,
-        #                      relief="flat",
-        #                      borderwidth=0,
-        #                      highlightthickness=0,
-        #                      bordercolor=styles.color_less_dark_bg
-        #                      )
-
-        # Button style
-        self.style.configure("Login.TButton",
-                             background=styles.color_terminal_green,
-                             foreground=styles.color_dark_bg,
-                             font=styles.font_button,
-                             padding=(20, 24),
-                             anchor="w",
-                             borderwidth=0, relief="flat")
-        self.style.map("Login.TButton",
-                       background=[('active', styles.color_terminal_green), ('pressed', styles.color_terminal_green)])
-
-        super().__init__(parent, style="Login.TFrame")
-        self.controller = controller
-        self.parent = parent
-
-        # ---titles---
-        self.title_frame = ttk.Frame(self, style="Login.TFrame")
-        self.title_frame.pack(pady=(102, 0), padx=62, fill="x")
-
-        self.page_title = ttk.Label(
-            self.title_frame,
-            text="DevOps",
-            style="LoginTitle.TLabel"
-        )
-        self.page_title.pack(side="left")
-
-        self.page_icon = ttk.Label(
-            self.title_frame,
-            text="V1.0.3",
-            style="LoginIcon.TLabel"
-        )
-        self.page_icon.pack(side="right")
-
-        self.page_subtitle = ttk.Label(
-            self,
-            text="ATM_MACHINE",
-            style="LoginSubtitle.TLabel"
-        )
-        self.page_subtitle.pack(pady=(0, 20), padx=62, anchor="w")
-
-        # ---id---
-        self.id_label = ttk.Label(
-            self,
-            text="> SSH_TO_YOUR_MACHINE_",
-            style="LoginDetail.TLabel"
-        )
-        self.id_label.pack(padx=62, anchor="w")
-
-        self.id_entry_frame_line = tk.Frame(
-            self,
-            bg=styles.color_terminal_green,
-            height=2
-        )
-        self.id_entry_frame_line.pack(pady=(5, 12), padx=62, fill='x', anchor="w")
-
-        self.id_entry_frame_background = ttk.Frame(
-            self.id_entry_frame_line,
-            style="Input.TFrame"
-        )
-        self.id_entry_frame_background.pack(side="top", fill="x", pady=(0, 2))
-
-        self.id_entry = tk.Entry(
-            self.id_entry_frame_background,
-            font=styles.font_field,
-            background=styles.color_less_dark_bg,
-            foreground=styles.color_text_color,
-            borderwidth=0,
-            highlightthickness=0,
-            insertbackground=styles.color_text_color
-
-        )
-        self.id_entry.pack(side="top", fill="x", ipady=12, padx=15)
-
-        # ---pin---
-        self.pin_label = ttk.Label(
-            self,
-            text="> ENTER_PIN_",
-            style="LoginDetail.TLabel"
-        )
-        self.pin_label.pack(padx=62, anchor="w")
-
-        self.pin_entry_frame_line = tk.Frame(
-            self,
-            bg=styles.color_terminal_green,
-            height=2
-        )
-        self.pin_entry_frame_line.pack(pady=(5, 12), padx=62, fill='x', anchor="w")
-
-        self.pin_entry_frame_background = ttk.Frame(
-            self.pin_entry_frame_line,
-            style="Input.TFrame"
-        )
-        self.pin_entry_frame_background.pack(side="top", fill="x", pady=(0, 2))
-
-        self.pin_entry = tk.Entry(
-            self.pin_entry_frame_background,
-            font=styles.font_field,
-            background=styles.color_less_dark_bg,
-            foreground=styles.color_text_color,
-            borderwidth=0,
-            highlightthickness=0,
-            insertbackground=styles.color_text_color,
-            show="*"
-        )
-        self.pin_entry.pack(side="top", fill="x", ipady=12, padx=15)
-
-        self.auth_button = ttk.Button(
-            self,
-            text="SHH_AUTHENTICATE",
-            style="Login.TButton",
-            cursor="hand2",
-            command=self.login_button_acion
-        )
-        self.auth_button.pack(pady=(20, 8), padx=62, fill="x", anchor="w")
-
-        self.admin_button = ttk.Button(
-            self,
-            text="Admin",
-            style="Login.TButton",
-            cursor="hand2"
-        )
-        self.admin_button.pack(pady=(0, 8), padx=62, fill="x", anchor="w")
-
-        self.exit_button = ttk.Button(
-            self,
-            text="Exit",
-            style="Login.TButton",
-            cursor="hand2",
-            command=self.controller.destroy
-        )
-        self.exit_button.pack(pady=(0, 102), padx=62, fill="x", anchor="w")
-
-    def login_button_acion(self):
-        input_id: str = self.id_entry.get()
-        input_pin: str = self.pin_entry.get()
-        if input_id.isdigit() and input_pin.isdigit():
-            login: tuple = self.bank.log_in_account(account_id=int(input_id), pin=int(input_pin))
-            if login[0]:
-                print(login[1])
-
-                self.controller.account: Account = self.bank.get_account(int(input_id))
-
-                frame = LogPage(parent=self.parent, controller=self.controller)
-                self.controller.frames[LogPage] = frame
-                frame.grid(row=0, column=0, sticky="nsew")
-
-                self.controller.show_frame(LogPage)
+            success, message = self.bank.log_in_account(account_id, pin)
+            if success:
+                self.current_account_id = account_id
+                self.current_pin = pin
+                self.show_user_menu(account_id)
             else:
-                print(login[1])
+                messagebox.showerror("Login Failed", message)
+
+        def handle_admin():
+            password = simpledialog.askstring("Admin Login", "Enter admin password:", show="*")
+            if self.bank.is_admin_pin(password):
+                self.show_admin_zone()
+            else:
+                messagebox.showerror("Access Denied", "Incorrect admin password")
+
+        # Log In button:
+        tk.Button(self.root, text="Log In", width=25, bg="#3c3c3c", fg="#ffffff",
+                  activebackground="#555555", command=handle_login).place(relx=0.5, rely=0.65, anchor="center")
+
+        # Admin Zone button:
+        tk.Button(self.root, text="Admin Zone", width=25, bg="#3c3c3c", fg="#ffffff",
+                  activebackground="#555555", command=handle_admin).place(relx=0.5, rely=0.72, anchor="center")
+
+        # Exit button:
+        tk.Button(self.root, text="Exit", width=25, command=self.root.destroy,
+                  bg="#3c3c3c", fg="#ffffff", activebackground="#555555").place(relx=0.5, rely=0.79, anchor="center")
+
+    # * UI DESIGN + Logic of 'Log In' screen -----finish * #
+    # * UI DESIGN + Logic of 'Log In' screen -----finish * #
+
+    # * UI DESIGN of 'user Menu' screen - no logic * #
+    # * UI DESIGN of 'user Menu' screen - no logic * #
+    def show_user_menu(self, account_id):
+        self.clear_screen()
+        account = self.bank.get_account(account_id)
+
+        # --- info frame ---
+        info_frame = tk.Frame(self.root, bg="#2e2e2e", bd=0)
+        info_frame.place(relx=0.5, rely=0.13, anchor="center", width=320)
+
+        tk.Label(info_frame, text=account.name, bg="#2e2e2e", fg="#ffffff",
+                 font=("Arial", 15, "bold")).pack(pady=(12, 2))
+        tk.Label(info_frame, text=f"ID: {account.id}", bg="#2e2e2e", fg="#aaaaaa",
+                 font=("Arial", 11)).pack()
+        self.balance_label = tk.Label(info_frame, text=f"Balance: ${account.balance:,.2f}", bg="#2e2e2e", fg="#4caf50",
+                                      font=("Arial", 13, "bold"))
+        self.balance_label.pack(pady=(4, 12))
+
+        # --- buttons frame ---
+        btn_frame = tk.Frame(self.root, bg="#1e1e1e")
+        btn_frame.place(relx=0.5, rely=0.57, anchor="center")
+
+        btn_cfg = dict(width=25, bg="#3c3c3c", fg="#ffffff",
+                       activebackground="#555555", font=("Arial", 11), relief="flat")
+
+        deposit_btn = tk.Button(btn_frame, text="Deposit", **btn_cfg)
+        deposit_btn.pack(pady=5)
+        deposit_btn.config(command=self.handle_deposit)
+        withdraw_btn = tk.Button(btn_frame, text="Withdraw",   **btn_cfg)
+        withdraw_btn.pack(pady=5)
+        withdraw_btn.config(command=self.handle_withdraw)
+        transfer_btn = tk.Button(btn_frame, text="Transfer",       **btn_cfg)
+        transfer_btn.pack(pady=5)
+        transfer_btn.config(command=self.handle_transfer)
+        history_btn = tk.Button(btn_frame, text="History",    **btn_cfg)
+        history_btn.pack(pady=5)
+        history_btn.config(command=self.handle_history)
+        change_pin_btn = tk.Button(btn_frame, text="Change PIN", **btn_cfg)
+        change_pin_btn.pack(pady=5)
+        change_pin_btn.config(command=self.handle_change_pin)
+        exit_btn = tk.Button(btn_frame, text="Exit entire App", **btn_cfg)
+        exit_btn.pack(pady=5)
+        exit_btn.config(command=self.handle_exit)
+
+        tk.Button(self.root, text="← Log Out", width=25, bg="#3c3c3c", fg="#aaaaaa",
+                  activebackground="#555555", font=("Arial", 10), relief="flat",
+                  command=self.show_login_screen).place(relx=0.5, rely=0.94, anchor="center")
+    # * UI DESIGN of 'user Menu' screen - no logic -----finish * #
+    # * UI DESIGN of 'user Menu' screen - no logic -----finish * #
+
+    # * Logic of 'user Menu' screen  * #
+    # * Logic of 'user Menu' screen  * #
+    def handle_deposit(self):
+        window = tk.Toplevel(self.root)
+        window.title("הפקדה")
+
+        tk.Label(window, text="Enter amount:").pack(pady=10)
+        amount_entry = tk.Entry(window)
+        amount_entry.pack(pady=5)
+
+        def confirm_deposit():
+            try:
+                amount = float(amount_entry.get())
+                if amount <= 0:
+                    messagebox.showerror("Error", "Amount must be a positive number", parent=window)
+                    return
+            except ValueError:
+                messagebox.showerror("Error", "Amount must be a positive number", parent=window)
+                return
+
+            account = self.bank.get_account(self.current_account_id)
+            success = account.deposit(amount, self.current_pin)
+            if success:
+                save_data(self.bank)
+                self.balance_label.config(text=f"Balance: ${account.balance:,.2f}")
+                messagebox.showinfo("Success", f"Deposited ${amount:,.2f} successfully", parent=window)
+                window.destroy()
+            else:
+                messagebox.showerror("Error", "Deposit failed", parent=window)
+
+        tk.Button(window, text="Deposit", command=confirm_deposit).pack(pady=10)
+
+    def handle_withdraw(self):
+        window = tk.Toplevel(self.root)
+        window.title("משיכה")
+
+        tk.Label(window, text="Enter amount:").pack(pady=10)
+        amount_entry = tk.Entry(window)
+        amount_entry.pack(pady=5)
+
+        def confirm_withdraw():
+            try:
+                amount = float(amount_entry.get())
+                if amount <= 0:
+                    messagebox.showerror("Error", "Amount must be a positive number", parent=window)
+                    return
+            except ValueError:
+                messagebox.showerror("Error", "Amount must be a positive number", parent=window)
+                return
+
+            account = self.bank.get_account(self.current_account_id)
+            success = account.withdraw(amount, self.current_pin)
+            if success:
+                save_data(self.bank)
+                self.balance_label.config(text=f"Balance: ${account.balance:,.2f}")
+                messagebox.showinfo("Success", f"Withdrew ${amount:,.2f} successfully", parent=window)
+                window.destroy()
+            else:
+                messagebox.showerror("Error", "Withdrawal failed", parent=window)
+
+        tk.Button(window, text="Withdraw", command=confirm_withdraw).pack(pady=10)
+
+    def handle_transfer(self):
+        window = tk.Toplevel(self.root)
+        window.title("Transfer")
+        window.geometry("280x200")
+
+        tk.Label(window, text="Destination ID:").pack(pady=(14, 2))
+        dest_entry = tk.Entry(window)
+        dest_entry.pack(pady=2)
+
+        tk.Label(window, text="Amount:").pack(pady=(10, 2))
+        amount_entry = tk.Entry(window)
+        amount_entry.pack(pady=2)
+
+        def confirm_transfer():
+            # validate destination ID input
+            try:
+                dest_id = int(dest_entry.get())
+            except ValueError:
+                messagebox.showerror("Error", "Destination ID must be a number", parent=window)
+                return
+
+            # validate amount input
+            try:
+                amount = float(amount_entry.get())
+                if amount <= 0:
+                    raise ValueError
+            except ValueError:
+                messagebox.showerror("Error", "Amount must be a positive number", parent=window)
+                return
+
+            # same account check
+            if dest_id == self.current_account_id:
+                messagebox.showerror("Error", "Cannot transfer to your own account", parent=window)
+                return
+
+            # destination exists check
+            dest_account = self.bank.get_account(dest_id)
+            if dest_account is None:
+                messagebox.showerror("Error", f"Account {dest_id} does not exist", parent=window)
+                return
+
+            # destination blocked check
+            if dest_account.is_blocked:
+                messagebox.showerror("Error", "Destination account is blocked", parent=window)
+                return
+
+            # sufficient balance check
+            sender = self.bank.get_account(self.current_account_id)
+            if amount > sender.balance:
+                messagebox.showerror("Error", "Insufficient balance", parent=window)
+                return
+
+            success, message = self.bank.transaction_to_from_accounts(
+                self.current_account_id, dest_id, amount, self.current_pin
+            )
+            if success:
+                save_data(self.bank)
+                self.balance_label.config(text=f"Balance: ${sender.balance:,.2f}")
+                messagebox.showinfo("Success", f"Transferred ${amount:,.2f} to account {dest_id}", parent=window)
+                window.destroy()
+            else:
+                messagebox.showerror("Error", message, parent=window)
+
+        tk.Button(window, text="Transfer", command=confirm_transfer).pack(pady=14)
+
+    def handle_history(self):
+        """use fitussi first easier option: 'insert(tk.End, text) and not
+        'tk.Text' and "STATE=DISABLED" to make it read-only, because easier and only 'read'"""
+        account = self.bank.get_account(self.current_account_id)
+        window = tk.Toplevel(self.root)
+        window.title("Transaction History")
+        window.geometry("420x300")
+
+        tk.Label(window, text="Transaction History", font=("Arial", 14, "bold")).pack(pady=8)
+
+        frame = tk.Frame(window)
+        frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+
+        scrollbar = tk.Scrollbar(frame)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        listbox = tk.Listbox(frame, yscrollcommand=scrollbar.set, font=("Courier", 10), width=55)
+        listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.config(command=listbox.yview)
+
+        if not account.actions_log:
+            listbox.insert(tk.END, "  No transactions yet.")
         else:
-            print("invalid input")
+            for action in account.actions_log:
+                time_str = action["time"].strftime("%Y-%m-%d %H:%M")
+                amount_str = f"${action['amount']:,.2f}"
+                action_type = action["type"].replace("_", " ").title()
+                counterparty = f" -> {action['counterparty']}" if action["counterparty"] else ""
+                listbox.insert(tk.END, f"  {time_str}  {action_type:<18} {amount_str}{counterparty}")
+
+        tk.Button(window, text="Close", command=window.destroy).pack(pady=8)
+
+    def handle_change_pin(self):
+        window = tk.Toplevel(self.root)
+        window.title("Change PIN")
+        window.geometry("280x220")
+        window.configure(bg="#1e1e1e")
+
+        lbl_cfg = dict(bg="#1e1e1e", fg="#aaaaaa", font=("Arial", 10))
+        entry_cfg = dict(width=22, show="*", bg="#2e2e2e", fg="#ffffff",
+                         insertbackground="#ffffff", relief="flat", font=("Arial", 12))
+
+        tk.Label(window, text="Current PIN", **lbl_cfg).pack(pady=(18, 2))
+        current_entry = tk.Entry(window, **entry_cfg)
+        current_entry.pack()
+
+        tk.Label(window, text="New PIN", **lbl_cfg).pack(pady=(10, 2))
+        new_entry = tk.Entry(window, **entry_cfg)
+        new_entry.pack()
+
+        tk.Label(window, text="Verify New PIN", **lbl_cfg).pack(pady=(10, 2))
+        verify_entry = tk.Entry(window, **entry_cfg)
+        verify_entry.pack()
+
+        def confirm_change():
+            try:
+                old_pin = int(current_entry.get())
+                new_pin = int(new_entry.get())
+                verify_pin = int(verify_entry.get())
+            except ValueError:
+                messagebox.showerror("Error", "PIN must be a number", parent=window)
+                return
+
+            if new_pin != verify_pin:
+                messagebox.showerror("Error", "New PINs do not match", parent=window)
+                return
+
+            account = self.bank.get_account(self.current_account_id)
+            if account.change_pin(old_pin, new_pin):
+                self.current_pin = new_pin
+                save_data(self.bank)
+                messagebox.showinfo("Success", "PIN changed successfully", parent=window)
+                window.destroy()
+            else:
+                messagebox.showerror("Error", "Current PIN is incorrect", parent=window)
+
+        tk.Button(window, text="Change PIN", bg="#3c3c3c", fg="#ffffff",
+                  activebackground="#555555", relief="flat",
+                  command=confirm_change).pack(pady=14)
+
+    def handle_exit(self):
+        self.root.destroy()
+    # * Logic of 'user Menu' screen -----finish * #
+    # * Logic of 'user Menu' screen -----finish * #
+
+    # * UI of 'Admin Zone' screen * #
+    # * UI of 'Admin Zone' screen * #
+    def show_admin_zone(self):
+        self.clear_screen()
+        tk.Label(self.root, text="Admin Zone", bg="#1e1e1e", fg="#ffffff",
+                 font=("Arial", 16, "bold")).place(relx=0.5, rely=0.05, anchor="center")
+
+        # --- buttons frame ---
+        btn_frame = tk.Frame(self.root, bg="#1e1e1e")
+        btn_frame.place(relx=0.5, rely=0.5, anchor="center")
+
+        btn_cfg = dict(width=25, bg="#3c3c3c", fg="#ffffff",
+                       activebackground="#555555", font=("Arial", 11), relief="flat")
+
+        create_account_btn = tk.Button(btn_frame, text="Create new Account", **btn_cfg,
+                                       command=self.handle_create_account)
+        create_account_btn.pack(pady=5)
+
+        watch_accounts_btn = tk.Button(btn_frame, text="Watch all accounts", **btn_cfg,
+                                       command=self.handle_watch_accounts)
+        watch_accounts_btn.pack(pady=5)
+
+        block_account_btn = tk.Button(btn_frame, text="Block / release accounts", **btn_cfg,
+                                      command=self.handle_block_account)
+        block_account_btn.pack(pady=5)
+
+        tk.Button(self.root, text="← Log Out", width=25, bg="#3c3c3c", fg="#aaaaaa",
+                  activebackground="#555555", font=("Arial", 10), relief="flat",
+                  command=self.show_login_screen).place(relx=0.5, rely=0.94, anchor="center")
+
+    # * UI of 'Admin Zone' screen -----finish * #
+    # * UI of 'Admin Zone' screen -----finish * #
+
+    # * Logic of 'Admin Zone' screen * #
+    # * Logic of 'Admin Zone' screen * #
+    def handle_watch_accounts(self):
+        window = tk.Toplevel(self.root)
+        window.title("All Accounts")
+        window.geometry("600x400")
+        window.configure(bg="#1e1e1e")
+        window.grab_set()
+
+        tk.Label(window, text="All Accounts", bg="#1e1e1e", fg="#ffffff",
+                 font=("Arial", 14, "bold")).pack(pady=(12, 6))
+
+        columns = ("id", "name", "balance", "status")
+        tree = ttk.Treeview(window, columns=columns, show="headings", height=15)
+
+        tree.heading("id", text="Account ID")
+        tree.heading("name", text="Account Name")
+        tree.heading("balance", text="Balance")
+        tree.heading("status", text="Status")
+
+        tree.column("id", width=100, anchor="center")
+        tree.column("name", width=180, anchor="w")
+        tree.column("balance", width=120, anchor="center")
+        tree.column("status", width=100, anchor="center")
+
+        style = ttk.Style()
+        style.configure("Treeview", background="#2d2d2d", foreground="#ffffff",
+                        fieldbackground="#2d2d2d", rowheight=26)
+        style.configure("Treeview.Heading", background="#3c3c3c", foreground="#ffffff")
+        style.map("Treeview", background=[("selected", "#555555")])
+
+        tree.tag_configure("active", foreground="#00cc66")
+        tree.tag_configure("blocked", foreground="#ff4444")
+
+        for acc_id, account in self.bank._accounts.items():
+            status = "Block" if account.is_blocked else "Active"
+            tag = "blocked" if account.is_blocked else "active"
+            tree.insert("", "end",
+                        values=(acc_id, account.name, f"${account.balance:.2f}", status),
+                        tags=(tag,))
+
+        scrollbar = ttk.Scrollbar(window, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=scrollbar.set)
+        tree.pack(side="left", fill="both", expand=True, padx=(10, 0), pady=(0, 10))
+        scrollbar.pack(side="left", fill="y", pady=(0, 10))
+
+    def handle_block_account(self):
+        """exactly the same table as 'watch accounts' but
+        with button to block/unblock each account (except admin)"""
+        window = tk.Toplevel(self.root)
+        window.title("Block / Release Accounts")
+        window.geometry("650x440")
+        window.configure(bg="#1e1e1e")
+        window.grab_set()
+
+        tk.Label(window, text="Block / Release Accounts", bg="#1e1e1e", fg="#ffffff",
+                 font=("Arial", 14, "bold")).pack(pady=(12, 6))
+
+        columns = ("id", "name", "balance", "status", "action")
+        tree = ttk.Treeview(window, columns=columns, show="headings", height=13)
+
+        tree.heading("id", text="Account ID")
+        tree.heading("name", text="Account Name")
+        tree.heading("balance", text="Balance")
+        tree.heading("status", text="Status")
+        tree.heading("action", text="Action")
+
+        tree.column("id", width=90, anchor="center")
+        tree.column("name", width=170, anchor="w")
+        tree.column("balance", width=110, anchor="center")
+        tree.column("status", width=90, anchor="center")
+        tree.column("action", width=130, anchor="center")
+
+        style = ttk.Style()
+        style.configure("Treeview", background="#2d2d2d", foreground="#ffffff",
+                        fieldbackground="#2d2d2d", rowheight=26)
+        style.configure("Treeview.Heading", background="#3c3c3c", foreground="#ffffff")
+        style.map("Treeview", background=[("selected", "#555555")])
+
+        tree.tag_configure("active", foreground="#00cc66")
+        tree.tag_configure("blocked", foreground="#ff4444")
+
+        def populate():
+            tree.delete(*tree.get_children())
+            for acc_id, account in self.bank._accounts.items():
+                status = "Blocked" if account.is_blocked else "Active"
+                action = "Unblock" if account.is_blocked else "Block"
+                tag = "blocked" if account.is_blocked else "active"
+                tree.insert("", "end",
+                            values=(acc_id, account.name, f"${account.balance:.2f}", status, action),
+                            tags=(tag,), iid=str(acc_id))
+
+        populate()
+
+        def toggle_selected():
+            selected = tree.selection()
+            if not selected:
+                messagebox.showwarning("No Selection", "Please select an account first.", parent=window)
+                return
+            acc_id = int(selected[0])
+            account = self.bank._accounts[acc_id]
+            account.is_blocked = not account.is_blocked
+            save_data(self.bank)
+            populate()
+
+        frame_bottom = tk.Frame(window, bg="#1e1e1e")
+        frame_bottom.pack(fill="x", padx=10, pady=(6, 10))
+
+        tk.Button(frame_bottom, text="Block / Unblock Selected",
+                  bg="#e07b00", fg="#ffffff", activebackground="#c46a00",
+                  font=("Arial", 11, "bold"), relief="flat", width=24,
+                  command=toggle_selected).pack(pady=4)
+
+        scrollbar = ttk.Scrollbar(window, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=scrollbar.set)
+        tree.pack(side="left", fill="both", expand=True, padx=(10, 0))
+        scrollbar.pack(side="left", fill="y")
+
+    def handle_create_account(self):
+        window = tk.Toplevel(self.root)
+        window.title("Create New Account")
+        window.geometry("380x320")
+        window.configure(bg="#1e1e1e")
+        window.grab_set()
+
+        tk.Label(window, text="Create New Account", bg="#1e1e1e", fg="#ffffff",
+                 font=("Arial", 14, "bold")).pack(pady=(16, 10))
+
+        form = tk.Frame(window, bg="#1e1e1e")
+        form.pack(padx=20, fill="x")
+
+        tk.Label(form, text="Account Name:", bg="#1e1e1e", fg="#cccccc",
+                 font=("Arial", 11)).grid(row=0, column=0, sticky="w", pady=6)
+        name_entry = tk.Entry(form, font=("Arial", 11), bg="#2d2d2d", fg="#ffffff",
+                              insertbackground="#ffffff", relief="flat", width=22)
+        name_entry.grid(row=0, column=1, padx=(10, 0), pady=6)
+
+        tk.Label(form, text="Initial Balance:", bg="#1e1e1e", fg="#cccccc",
+                 font=("Arial", 11)).grid(row=1, column=0, sticky="w", pady=6)
+        balance_entry = tk.Entry(form, font=("Arial", 11), bg="#2d2d2d", fg="#ffffff",
+                                 insertbackground="#ffffff", relief="flat", width=22)
+        balance_entry.insert(0, "0")
+        balance_entry.grid(row=1, column=1, padx=(10, 0), pady=6)
+
+        result_frame = tk.Frame(window, bg="#1e1e1e")
+        result_frame.pack(padx=20, pady=(10, 0), fill="x")
+
+        id_label = tk.Label(result_frame, text="", bg="#1e1e1e", fg="#00cc66",
+                            font=("Arial", 11, "bold"))
+        id_label.pack(anchor="w")
+        pin_label = tk.Label(result_frame, text="", bg="#1e1e1e", fg="#00cc66",
+                             font=("Arial", 11, "bold"))
+        pin_label.pack(anchor="w")
+
+        def submit():
+            name = name_entry.get().strip()
+            if not name:
+                messagebox.showwarning("Missing Name", "Please enter an account name.", parent=window)
+                return
+            try:
+                balance = float(balance_entry.get())
+            except ValueError:
+                messagebox.showwarning("Invalid Balance", "Balance must be a number.", parent=window)
+                return
+            if balance < 0:
+                messagebox.showwarning("Invalid Balance", "Balance cannot be negative.", parent=window)
+                return
+
+            account = self.bank.create_account(name=name, balance=balance)
+            save_data(self.bank)
+
+            name_entry.config(state="disabled")
+            balance_entry.config(state="disabled")
+            id_label.config(text=f"Account ID:  {account.id}")
+            pin_label.config(text=f"Account PIN: {account.pin}")
+            submit_btn.config(text="Account created successfully,\ncopy details and close window", state="disabled", width=34)
+
+        submit_btn = tk.Button(window, text="Create Account",
+                               bg="#00884d", fg="#ffffff", activebackground="#006b3c",
+                               font=("Arial", 11, "bold"), relief="flat", width=20,
+                               command=submit)
+        submit_btn.pack(pady=(12, 4))
+
+    # * Logic of 'Admin Zone' screen -----finish * #
+    # * Logic of 'Admin Zone' screen -----finish * #
+
+    # * shared logic of all screens * #
+    # * shared logic of all screens * #
+    def clear_screen(self):
+        """we use single-window design, so to navigate to new screen must clear it first"""
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
+    def run(self):
+        self.show_login_screen()
+        self.root.mainloop()
+    # * shared logic of all screens -----finish * #
+    # * shared logic of all screens -----finish * #
