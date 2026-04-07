@@ -334,11 +334,12 @@ class ATMApp:
         verify_entry.pack()
 
         def confirm_change():
-            try:
-                old_pin = int(current_entry.get())
-                new_pin = int(new_entry.get())
-                verify_pin = int(verify_entry.get())
-            except ValueError:
+            """note account.change_pin() work with str but we store it as int!!! """
+            old_pin = current_entry.get()
+            new_pin = new_entry.get()
+            verify_pin = verify_entry.get()
+
+            if not (old_pin.isdigit() and new_pin.isdigit() and verify_pin.isdigit()):
                 messagebox.showerror("Error", "PIN must be a number", parent=window)
                 return
 
@@ -348,7 +349,7 @@ class ATMApp:
 
             account = self.bank.get_account(self.current_account_id)
             if account.change_pin(old_pin, new_pin):
-                self.current_pin = new_pin
+                self.current_pin = int(new_pin)
                 save_data(self.bank)
                 messagebox.showinfo("Success", "PIN changed successfully", parent=window)
                 window.destroy()

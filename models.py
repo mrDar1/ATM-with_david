@@ -60,7 +60,11 @@ class Account:
             return False
 
     def change_pin(self, old_pin: str, new_pin: str) -> bool:
-        if self.check_pin(old_pin) and new_pin.isdigit() and len(new_pin) < 5:
+        """we check that new pin is 4 digits, not the same as old, and that old is correct.
+        order is important!
+        first check "cheap" tests (length, isdigit) before check_pin that more "expensive" because of function call.
+        we need isascii(), to prevent arab digits """
+        if len(new_pin) == 4 and new_pin.isascii() and new_pin.isdigit() and new_pin != old_pin and self.check_pin(old_pin):
             self.pin = int(new_pin)
             return True
         else:
