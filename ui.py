@@ -16,7 +16,7 @@ class ATMApp:
         # for dark background
         self.root.configure(bg="#1e1e1e")
         style = ttk.Style()
-        style.theme_use("clam")  # required for color overrides
+        style.theme_use("clam")  # for color overrides
         style.configure("TButton", background="#3c3c3c", foreground="#ffffff")
         style.configure("TLabel",  background="#1e1e1e", foreground="#ffffff")
         # for dark background - end.
@@ -42,7 +42,7 @@ class ATMApp:
         # PIN entry (hidden):
         tk.Label(self.root, text="PIN", bg="#1e1e1e", fg="#aaaaaa",
                  font=("Arial", 11)).place(relx=0.5, rely=0.50, anchor="center")
-        pin_entry = tk.Entry(self.root, width=28, show="●", bg="#2e2e2e", fg="#ffffff", insertbackground="#ffffff",
+        pin_entry = tk.Entry(self.root, width=28, show="*", bg="#2e2e2e", fg="#ffffff", insertbackground="#ffffff",
                              relief="flat", font=("Arial", 13))
         pin_entry.place(relx=0.5, rely=0.56, anchor="center")
 

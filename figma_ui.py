@@ -67,6 +67,9 @@ class LogPage(ttk.Frame):
             new_card: tk.Frame = self.log_card(amount=action["amount"],datetime=action["time"],action_type=action["type"],counter_party=action["counterparty"])
             new_card.pack(pady=5, padx=62, fill="x")
 
+    def go_back(self):
+        self.controller.show_frame(LoginPage)
+
     def page_titles(self):
         # Frame styles
 
@@ -87,9 +90,28 @@ class LogPage(ttk.Frame):
                              foreground=styles.color_text_color,
                              font=styles.font_page_sub_title)
 
+        self.style.configure("LogBack.TButton",
+                             background=styles.color_less_dark_bg,
+                             foreground=styles.color_terminal_green,
+                             font=styles.font_detils,
+                             padding=(6, 4),
+                             borderwidth=0, relief="flat")
+        self.style.map("LogBack.TButton",
+                       background=[('active', styles.color_less_dark_bg), ('pressed', styles.color_less_dark_bg)])
+
+        # ---back button---
+        self.back_button = ttk.Button(
+            self,
+            text="cd ..",
+            style="LogBack.TButton",
+            cursor="hand2",
+            command=self.go_back
+        )
+        self.back_button.pack(pady=(12, 0), padx=62, anchor="w")
+
         # ---titles---
         self.title_frame = ttk.Frame(self, style="Log.TFrame")
-        self.title_frame.pack(pady=(102, 0), padx=62, fill="x")
+        self.title_frame.pack(pady=(50, 0), padx=62, fill="x")
 
         self.page_title = ttk.Label(
             self.title_frame,
@@ -300,7 +322,7 @@ class LoginPage(ttk.Frame):
 
         self.auth_button = ttk.Button(
             self,
-            text="SHH_AUTHENTICATE",
+            text="SHH_AUTHENTICATE: .LOG",
             style="Login.TButton",
             cursor="hand2",
             command=self.login_button_acion
