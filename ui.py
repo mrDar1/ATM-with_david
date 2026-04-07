@@ -2,10 +2,9 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
 from storage import load_data, save_data
-from style import (BG, BG_CARD, BG_TREE, BTN, BTN_HOVER,
+from style import (BG, BG_ENTRY, BTN, BTN_HOVER,
                    FG, FG_MUTED, FG_LIGHT,
-                   GREEN,
-                   RED, ORANGE)
+                   GREEN, RED, ORANGE)
 
 
 class ATMApp:
@@ -51,14 +50,14 @@ class ATMApp:
         # account ID entry:
         tk.Label(self.root, text="Account ID", bg=BG, fg=FG_MUTED,
                  font=("Arial", 11)).place(relx=0.5, rely=0.35, anchor="center")
-        account_entry = tk.Entry(self.root, width=28, bg=BG_CARD, fg=FG, insertbackground=FG,
+        account_entry = tk.Entry(self.root, width=28, bg=BG_ENTRY, fg=FG, insertbackground=FG,
                                  relief="flat", font=("Arial", 13))
         account_entry.place(relx=0.5, rely=0.41, anchor="center")
 
         # PIN entry (hidden):
         tk.Label(self.root, text="PIN", bg=BG, fg=FG_MUTED,
                  font=("Arial", 11)).place(relx=0.5, rely=0.50, anchor="center")
-        pin_entry = tk.Entry(self.root, width=28, show="*", bg=BG_CARD, fg=FG, insertbackground=FG,
+        pin_entry = tk.Entry(self.root, width=28, show="*", bg=BG_ENTRY, fg=FG, insertbackground=FG,
                              relief="flat", font=("Arial", 13))
         pin_entry.place(relx=0.5, rely=0.56, anchor="center")
 
@@ -112,14 +111,14 @@ class ATMApp:
         account = self.bank.get_account(account_id)
 
         # --- info frame ---
-        info_frame = tk.Frame(self.root, bg=BG_CARD, bd=0)
+        info_frame = tk.Frame(self.root, bg=BG_ENTRY, bd=0)
         info_frame.place(relx=0.5, rely=0.13, anchor="center", width=320)
 
-        tk.Label(info_frame, text=account.name, bg=BG_CARD, fg=FG,
+        tk.Label(info_frame, text=account.name, bg=BG_ENTRY, fg=FG,
                  font=("Arial", 15, "bold")).pack(pady=(12, 2))
-        tk.Label(info_frame, text=f"ID: {account.id}", bg=BG_CARD, fg=FG_MUTED,
+        tk.Label(info_frame, text=f"ID: {account.id}", bg=BG_ENTRY, fg=FG_MUTED,
                  font=("Arial", 11)).pack()
-        self.balance_label = tk.Label(info_frame, text=f"Balance: ${account.balance:,.2f}", bg=BG_CARD, fg=GREEN,
+        self.balance_label = tk.Label(info_frame, text=f"Balance: ${account.balance:,.2f}", bg=BG_ENTRY, fg=GREEN,
                                       font=("Arial", 13, "bold"))
         self.balance_label.pack(pady=(4, 12))
 
@@ -318,7 +317,7 @@ class ATMApp:
         window.configure(bg=BG)
 
         lbl_cfg = dict(bg=BG, fg=FG_MUTED, font=("Arial", 10))
-        entry_cfg = dict(width=22, show="*", bg=BG_CARD, fg=FG,
+        entry_cfg = dict(width=22, show="*", bg=BG_ENTRY, fg=FG,
                          insertbackground=FG, relief="flat", font=("Arial", 12))
 
         tk.Label(window, text="Current PIN", **lbl_cfg).pack(pady=(18, 2))
@@ -420,8 +419,8 @@ class ATMApp:
         tree.column("status", width=100, anchor="center")
 
         style = ttk.Style()
-        style.configure("Treeview", background=BG_TREE, foreground=FG,
-                        fieldbackground=BG_TREE, rowheight=26)
+        style.configure("Treeview", background=BG_ENTRY, foreground=FG,
+                        fieldbackground=BG_ENTRY, rowheight=26)
         style.configure("Treeview.Heading", background=BTN, foreground=FG)
         style.map("Treeview", background=[("selected", BTN_HOVER)])
 
@@ -469,8 +468,8 @@ class ATMApp:
         tree.column("action", width=130, anchor="center")
 
         style = ttk.Style()
-        style.configure("Treeview", background=BG_TREE, foreground=FG,
-                        fieldbackground=BG_TREE, rowheight=26)
+        style.configure("Treeview", background=BG_ENTRY, foreground=FG,
+                        fieldbackground=BG_ENTRY, rowheight=26)
         style.configure("Treeview.Heading", background=BTN, foreground=FG)
         style.map("Treeview", background=[("selected", BTN_HOVER)])
 
@@ -528,13 +527,13 @@ class ATMApp:
 
         tk.Label(form, text="Account Name:", bg=BG, fg=FG_LIGHT,
                  font=("Arial", 11)).grid(row=0, column=0, sticky="w", pady=6)
-        name_entry = tk.Entry(form, font=("Arial", 11), bg=BG_TREE, fg=FG,
+        name_entry = tk.Entry(form, font=("Arial", 11), bg=BG_ENTRY, fg=FG,
                               insertbackground=FG, relief="flat", width=22)
         name_entry.grid(row=0, column=1, padx=(10, 0), pady=6)
 
         tk.Label(form, text="Initial Balance:", bg=BG, fg=FG_LIGHT,
                  font=("Arial", 11)).grid(row=1, column=0, sticky="w", pady=6)
-        balance_entry = tk.Entry(form, font=("Arial", 11), bg=BG_TREE, fg=FG,
+        balance_entry = tk.Entry(form, font=("Arial", 11), bg=BG_ENTRY, fg=FG,
                                  insertbackground=FG, relief="flat", width=22)
         balance_entry.insert(0, "0")
         balance_entry.grid(row=1, column=1, padx=(10, 0), pady=6)

@@ -1,9 +1,8 @@
 # Color const
 BG          = "#1e1e1e"   # main window background
-BG_CARD     = "#2e2e2e"   # cards / entry fields
-BG_TREE     = "#2d2d2d"   # treeview rows
+BG_ENTRY    = "#2e2e2e"   # cards / entry fields
 BTN         = "#3c3c3c"   # regular button
-BTN_HOVER  = "#555555"   # button hover / active
+BTN_HOVER   = "#555555"   # button hover / active
 
 FG          = "#ffffff"   # primary text
 FG_MUTED    = "#aaaaaa"   # secondary / dim text
