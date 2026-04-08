@@ -76,7 +76,7 @@ ADMIN_PASSWORD=your_secret_password
 | Name | GitHub |
 |---|---|
 | David Snir | [@davidsnir](https://github.com/davidsnir) |
-| Yuval Dar | [@yuvaldar](https://github.com/yuvaldar) |
+| Yuval Dar | [@yuvaldar](https://github.com/mrDar1) |
 
 ---
 
