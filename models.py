@@ -1,6 +1,7 @@
 import datetime as dt
 import random as rd
 import os
+import hashlib
 
 from dotenv import load_dotenv
 
@@ -153,7 +154,8 @@ class Bank:
 
     @staticmethod
     def is_admin_pin(entered_password) -> bool:
-        secret = os.getenv("ADMIN_SECRET_PASS")
-        if not entered_password or not secret:
+        secret_hash = os.getenv("ADMIN_SECRET_PASS")
+        if not entered_password or not secret_hash:
             return False
-        return entered_password == secret
+        entered_hash = hashlib.sha256(entered_password.encode()).hexdigest()
+        return entered_hash == secret_hash
