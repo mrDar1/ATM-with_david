@@ -57,18 +57,17 @@ python main.py
 
 ---
 
-## 🔐 Environment Variables
+## environment variables
 // still not sure if to use it like that or hash it:
 
-Create a `.env` file in the root directory:
+create a `.env` file in the root directory:
 
 ```env
 ADMIN_PASSWORD=your_secret_password
 ```
 
-> ⚠️ **Never commit your `.env` file.** It's already listed in `.gitignore`.
+> **Never commit `.env` file.** It's already listed in `.gitignore`.
 
-<p align="center">Made with ☕ and Python</p>
 -->
 ---
 
