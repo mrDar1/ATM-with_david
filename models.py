@@ -154,6 +154,7 @@ class Bank:
 
     @staticmethod
     def is_admin_pin(entered_password) -> bool:
+        """deal with hash password from .env"""
         secret_hash = os.getenv("ADMIN_SECRET_PASS")
         if not entered_password or not secret_hash:
             return False
