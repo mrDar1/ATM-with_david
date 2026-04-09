@@ -157,8 +157,8 @@ class Bank:
     def is_admin_pin(entered_password: str) -> bool:
         """function compare admin password at '.env' file and user entered one:
         is verastile function:
-        can work with regular plaintext password or hashed.
-        to create hash password to store at .env, run at CLI:
+        can work with plaintext password or hashed password.
+        to create hash password to store at '.env', run at CLI:
         $ python3 -c "import hashlib; print(hashlib.sha256(b'YOUR_CHOSEN_PASS_HERE').hexdigest())"
         and the output hash, will be something like:
         9af15b336e6a9619928537df30b2e6a2376569fcf9d7e773eccede65606529a0
@@ -177,4 +177,7 @@ class Bank:
         # Comparing "aaa..." (100 chars wrong) takes longer than comparing "z..." (1 char wrong)
         # An attacker can measure response times to guess the secret one character at a time
         # It compares two strings in constant time — it always checks every character regardless of where the first mismatch is. The comparison time reveals nothing about the secret.
+
+        # * note: sha256 is quick hash and can fail at brute-force
+        # better use stronger "bcrypt" but its doing for us the hmac work and want to show it here.
         return is_correct_pass
