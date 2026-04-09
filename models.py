@@ -178,6 +178,6 @@ class Bank:
         # An attacker can measure response times to guess the secret one character at a time
         # It compares two strings in constant time — it always checks every character regardless of where the first mismatch is. The comparison time reveals nothing about the secret.
 
-        # * note: sha256 is quick hash and can fail at brute-force
+        # * note: sha256 is quick hash and can fail at brute-force. also not "salted"
         # better use stronger "bcrypt" but its doing for us the hmac work and want to show it here.
         return is_correct_pass
